@@ -78,5 +78,9 @@ trait KVOrm<'a>: KeyOrm<'a> {
     ) -> Result<Option<Self>, Box<dyn std::error::Error>> {
         Self::get_with_option(db, ReadOptions::new(), key)
     }
-    // TODO: delete
+    fn delete(
+        db: &Database<EncodedKey<Self>>,
+        sync: bool,
+        key: &EncodedKey<Self>,
+    ) -> Result<(), Box<dyn std::error::Error>>;
 }

@@ -1,5 +1,5 @@
 [workspace]
 members = [
-    "leveldb-orm-macro",
+    "leveldb-orm-derive",
     "leveldb-orm-trait",
 ]

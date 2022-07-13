@@ -1,6 +1,17 @@
 [package]
 name = "leveldb-orm-trait"
 version = "0.1.0"
+authors = [ "Bo zhang <dlhxzb@163.com>" ]
+
+description = "An ORM for leveldb"
+
+license = "MIT"
+readme = "README.md"
+
+documentation = "https://docs.rs/leveldb-orm"
+homepage = "https://github.com/dlhxzb/leveldb-orm"
+repository = "https://github.com/dlhxzb/leveldb-orm"
+
 edition = "2021"
 
 [dependencies]

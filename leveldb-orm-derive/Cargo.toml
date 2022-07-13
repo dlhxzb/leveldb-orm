@@ -1,6 +1,17 @@
 [package]
 name = "leveldb-orm-derive"
 version = "0.1.0"
+authors = [ "Bo zhang <dlhxzb@163.com>" ]
+
+description = "An ORM for leveldb"
+
+license = "MIT"
+readme = "README.md"
+
+documentation = "https://docs.rs/leveldb-orm"
+homepage = "https://github.com/dlhxzb/leveldb-orm"
+repository = "https://github.com/dlhxzb/leveldb-orm"
+
 edition = "2021"
 
 [lib]
@@ -11,7 +22,7 @@ syn = {version = "1.0", features = ["extra-traits", "parsing"] }
 quote = "1.0"
 proc-macro2 = "1.0"
 bincode = "1.3"
-leveldb-orm-trait = { path = "../leveldb-orm-trait" }
+leveldb-orm-trait = { version = "0.1.0", path = "../leveldb-orm-trait" }
 leveldb = "0.8"
 
 [dev-dependencies]

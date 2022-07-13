@@ -5,7 +5,7 @@ use std::marker::PhantomData;
 
 // db-key 0.0.5 only impl Key for i32, wrap for orphan rule
 #[derive(Debug, PartialEq)]
-struct EncodedKey<T: 'static> {
+pub struct EncodedKey<T: 'static> {
     pub inner: Vec<u8>,
     phantom: PhantomData<T>,
 }
@@ -40,7 +40,7 @@ impl<'a, T> From<&[u8]> for EncodedKey<T> {
     }
 }
 
-trait KeyOrm<'a>: Sized {
+pub trait KeyOrm<'a>: Sized {
     type KeyType;
     type KeyTypeRef: Serialize + 'a;
 
@@ -53,7 +53,7 @@ trait KeyOrm<'a>: Sized {
     fn key(&self) -> std::result::Result<EncodedKey<Self>, Box<dyn std::error::Error>>;
 }
 
-trait KVOrm<'a>: KeyOrm<'a> {
+pub trait KVOrm<'a>: KeyOrm<'a> {
     fn encode(&self) -> std::result::Result<Vec<u8>, Box<dyn std::error::Error>>;
     fn decode(data: &[u8]) -> std::result::Result<Self, Box<dyn std::error::Error>>;
     fn put_sync(

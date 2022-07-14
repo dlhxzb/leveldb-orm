@@ -1,15 +1,17 @@
 # leveldb-orm
 
-An ORM wrapper for Rust [levedb] [KV] APIs. Use [bincode] to encoder / decoder key and object.  
+An ORM wrapper for Rust [leveldb] [KV] APIs. Use [bincode] to encoder / decoder key and object.  
 
 [KV]: http://skade.github.io/leveldb/leveldb/database/kv/trait.KV.html
-[levedb]: https://crates.io/crates/leveldb
+[leveldb]: https://crates.io/crates/leveldb
 [bincode]: https://crates.io/crates/bincode
 
 ## Rust version policy
 Base on rust [leveldb]:
-> `leveldb` is built and tested on stable releases of Rust. This are currently `1.31.0` and `1.43.1`. Nightlies
+
+ `leveldb` is built and tested on stable releases of Rust. This are currently `1.31.0` and `1.43.1`. Nightlies
 might not build at any point and failures are allowed. There are no known issues with nightlies, though.
+
 
 ## Prerequisites
 `snappy` and `leveldb` need to be installed. On Ubuntu, I recommend:

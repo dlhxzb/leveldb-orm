@@ -1,4 +1,4 @@
-use leveldb_orm_derive::LevelDBOrm;
+use leveldb_orm::LevelDBOrm;
 use serde::{Deserialize, Serialize};
 
 #[derive(LevelDBOrm, Serialize, Deserialize)]

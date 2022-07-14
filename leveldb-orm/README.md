@@ -70,3 +70,7 @@ fn main() {
 ### Without `macros` feature
 
 Only have to impl `KeyOrm` trait manually.
+
+### Test
+* cargo test
+* cargo test --features "macros"

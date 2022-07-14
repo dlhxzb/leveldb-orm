@@ -1,6 +1,8 @@
 //! Use `LevelDBOrm` + `level_db_key` to auto impl trait in [leveldb-orm](https://crates.io/crates/leveldb-orm)
-//! 
+//!
 //! ```rust
+//! use leveldb_orm::LevelDBOrm;
+//!
 //! #[derive(LevelDBOrm)]
 //! #[level_db_key(executable, args)]
 //! struct Command {
@@ -8,21 +10,19 @@
 //!     pub args: Vec<String>,
 //!     pub current_dir: Option<String>,
 //! }
-//! ```
-//!   
-//! # Generate code
+//!  
+//! // Generate code
 //! 
-//! ```rust
-//! impl<'a> leveldb_orm::KeyOrm<'a> for Command {
-//!     type KeyType = (u8, Vec<String>);
-//!     type KeyTypeRef = (&'a u8, &'a Vec<String>);
-//!     #[inline]
-//!     fn key(
-//!         &self,
-//!     ) -> std::result::Result<leveldb_orm::EncodedKey<Self>, Box<dyn std::error::Error>> {
-//!         Self::encode_key((&self.executable, &self.args))
-//!     }
-//! }
+//! // impl<'a> leveldb_orm::KeyOrm<'a> for Command {
+//! //     type KeyType = (u8, Vec<String>);
+//! //     type KeyTypeRef = (&'a u8, &'a Vec<String>);
+//! //     #[inline]
+//! //     fn key(
+//! //         &self,
+//! //     ) -> std::result::Result<leveldb_orm::EncodedKey<Self>, Box<dyn std::error::Error>> {
+//! //         Self::encode_key((&self.executable, &self.args))
+//! //     }
+//! // }
 //! ```
 
 use proc_macro::TokenStream;
@@ -73,10 +73,7 @@ mod parse {
                 let path_name: Path = parse_quote!(level_db_key);
                 if meta.path() == &path_name {
                     if let Meta::List(MetaList { nested, .. }) = meta {
-                        let keys = nested
-                            .iter()
-                            .filter_map(parse_key)
-                            .collect::<Vec<_>>();
+                        let keys = nested.iter().filter_map(parse_key).collect::<Vec<_>>();
                         if keys.is_empty() {
                             None
                         } else {
@@ -113,10 +110,12 @@ mod parse {
                         .filter(|ident| ident == &key)
                         .map(|_| field.ty.clone())
                 })
-                .ok_or_else(|| Error::new(
-                    key.span(),
-                    format!("level_db_key: \"{key}\" not found in struct.",),
-                ))?;
+                .ok_or_else(|| {
+                    Error::new(
+                        key.span(),
+                        format!("level_db_key: \"{key}\" not found in struct.",),
+                    )
+                })?;
             res.push(ty);
         }
         Ok(res)

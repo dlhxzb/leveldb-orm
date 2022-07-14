@@ -1,11 +1,11 @@
-//! An ORM wrapper for Rust [`leveldb`] [`leveldb::database::kv::KV`] APIs. Use [`bincode`] to encoder / decoder key and object. 
+//! An ORM wrapper for Rust [`leveldb`] [`leveldb::database::kv::KV`] APIs. Use [`bincode`] to encoder / decoder key and object.
 //!
 //! [`leveldb::database::kv::KV`]: http://skade.github.io/leveldb/leveldb/database/kv/trait.KV.html
 //! [`leveldb`]: https://crates.io/crates/leveldb
-//! 
+//!
 //! #### Example
 //! This example shows the quickest way to get started with feature `macros`
-//! 
+//!
 //! ```toml
 //! [dependencies]
 //! leveldb = "0.8"
@@ -14,41 +14,47 @@
 //! ```
 //!
 //! ```rust
-//! use leveldb::database::Database;
-//! use leveldb::options::Options;
-//! use leveldb_orm::{KVOrm, KeyOrm, LevelDBOrm};
-//! use serde::{Deserialize, Serialize};
-//! 
-//! #[derive(LevelDBOrm, Serialize, Deserialize)]
-//! #[level_db_key(executable, args)]
-//! pub struct Command {
-//!     pub executable: u8,
-//!     pub args: Vec<String>,
-//!     pub current_dir: Option<String>,
+//! #[cfg(feature = "macros")]
+//! mod example {
+//!     use leveldb::database::Database;
+//!     use leveldb::options::Options;
+//!     use leveldb_orm::{KVOrm, KeyOrm, LevelDBOrm};
+//!     use serde::{Deserialize, Serialize};
+//!
+//!     #[derive(LevelDBOrm, Serialize, Deserialize)]
+//!     #[level_db_key(executable, args)]
+//!     pub struct Command {
+//!         pub executable: u8,
+//!         pub args: Vec<String>,
+//!         pub current_dir: Option<String>,
+//!     }
+//!
+//!     fn main() {
+//!         let cmd = Command {
+//!             executable: 1,
+//!             args: vec!["arg1".into(), "arg2".into(), "arg3".into()],
+//!             current_dir: Some("\\dir".into()),
+//!         };
+//!
+//!         let mut options = Options::new();
+//!         options.create_if_missing = true;
+//!         let database = Database::open(std::path::Path::new("./mypath"), options).unwrap();
+//!
+//!         cmd.put(&database).unwrap();
+//!
+//!         let key = Command::encode_key((&cmd.executable, &cmd.args)).unwrap();
+//!         // or `let key = cmd.key().unwrap();`
+//!         Command::get(&database, &key).unwrap();
+//!
+//!         Command::delete(&database, false, &key).unwrap();
+//!     }
 //! }
-//! 
-//! let cmd = Command {
-//!     executable: 1,
-//!     args: vec!["arg1".into(), "arg2".into(), "arg3".into()],
-//!     current_dir: Some("\\dir".into()),
-//! };
-//! 
-//! let mut options = Options::new();
-//! options.create_if_missing = true;
-//! let database = Database::open(std::path::Path::new("./mypath"), options).unwrap();
-//! 
-//! cmd.put(&database).unwrap();
-//! 
-//! let key = Command::encode_key((&cmd.executable, &cmd.args)).unwrap();
-//! // or `let key = cmd.key().unwrap();`
-//! Command::get(&database, &key).unwrap();
-//! 
-//! Command::delete(&database, false, &key).unwrap();
 //! ```
 
 #[cfg(feature = "macros")]
 pub use ::leveldb_orm_derive::LevelDBOrm;
 
+use leveldb::database::batch::Writebatch;
 use leveldb::database::Database;
 use leveldb::kv::KV;
 use leveldb::options::ReadOptions;
@@ -207,4 +213,18 @@ pub trait KVOrm<'a>: KeyOrm<'a> + Serialize + DeserializeOwned {
     }
 }
 
+/// An orm version of [`leveldb::database::batch::Writebatch::put`](http://skade.github.io/leveldb/leveldb/database/batch/struct.Writebatch.html#method.put)
+pub trait WritebatchOrm<'a>: KVOrm<'a> {
+    fn put_batch(
+        &self,
+        batch: &mut Writebatch<EncodedKey<Self>>,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        let key = self.key()?;
+        let value = self.encode()?;
+        batch.put(key, &value);
+        Ok(())
+    }
+}
+
 impl<'a, T: KeyOrm<'a> + Serialize + DeserializeOwned> KVOrm<'a> for T {}
+impl<'a, T: KVOrm<'a>> WritebatchOrm<'a> for T {}

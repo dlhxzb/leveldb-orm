@@ -5,12 +5,12 @@ mod drive_impl {
     use leveldb::database::Database;
     use leveldb::iterator::Iterable;
     use leveldb::options::{Options, ReadOptions, WriteOptions};
-    use leveldb_orm::{KVOrm, KeyOrm, LevelDBOrm, WritebatchOrm};
+    use leveldb_orm::{KVOrm, KeyOrm, LeveldbOrm, WritebatchOrm};
     use serde::{Deserialize, Serialize};
     use tempdir::TempDir;
 
-    #[derive(Debug, Clone, Serialize, LevelDBOrm, Deserialize, PartialEq)]
-    #[level_db_key(executable, args)]
+    #[derive(Debug, Clone, Serialize, LeveldbOrm, Deserialize, PartialEq)]
+    #[leveldb_key(executable, args)]
     struct Command {
         pub executable: u8,
         pub args: Vec<String>,

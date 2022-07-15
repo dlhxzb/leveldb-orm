@@ -18,11 +18,11 @@
 //! mod example {
 //!     use leveldb::database::Database;
 //!     use leveldb::options::Options;
-//!     use leveldb_orm::{KVOrm, KeyOrm, LevelDBOrm};
+//!     use leveldb_orm::{KVOrm, KeyOrm, LeveldbOrm};
 //!     use serde::{Deserialize, Serialize};
 //!
-//!     #[derive(LevelDBOrm, Serialize, Deserialize)]
-//!     #[level_db_key(executable, args)]
+//!     #[derive(LeveldbOrm, Serialize, Deserialize)]
+//!     #[leveldb_key(executable, args)]
 //!     pub struct Command {
 //!         pub executable: u8,
 //!         pub args: Vec<String>,
@@ -52,7 +52,7 @@
 //! ```
 
 #[cfg(feature = "macros")]
-pub use ::leveldb_orm_derive::LevelDBOrm;
+pub use ::leveldb_orm_derive::LeveldbOrm;
 
 use leveldb::database::batch::Writebatch;
 use leveldb::database::Database;
@@ -143,7 +143,7 @@ pub trait KeyOrm<'a>: Sized {
         bincode::deserialize(&data.inner).map_err(|e| e.into())
     }
 
-    /// `#[derive(LevelDBOrm)]` + `#[level_db_key(...)]` could auto impl this function, without derive macro you can impl it manully
+    /// `#[derive(LeveldbOrm)]` + `#[leveldb_key(...)]` could auto impl this function, without derive macro you can impl it manully
     fn key(&self) -> std::result::Result<EncodedKey<Self>, Box<dyn std::error::Error>>;
 }
 

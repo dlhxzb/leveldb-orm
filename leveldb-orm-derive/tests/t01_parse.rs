@@ -1,8 +1,8 @@
-use leveldb_orm::LevelDBOrm;
+use leveldb_orm::LeveldbOrm;
 use serde::{Deserialize, Serialize};
 
-#[derive(LevelDBOrm, Serialize, Deserialize)]
-#[level_db_key(executable, args)]
+#[derive(LeveldbOrm, Serialize, Deserialize)]
+#[leveldb_key(executable, args)]
 pub struct Command {
     pub executable: u8,
     pub args: Vec<String>,

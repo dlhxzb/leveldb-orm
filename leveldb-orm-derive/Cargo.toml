@@ -1,6 +1,6 @@
 [package]
 name = "leveldb-orm-derive"
-version = "0.1.2"
+version = "0.1.3"
 authors = [ "Bo zhang <dlhxzb@163.com>" ]
 
 description = "An ORM for leveldb"

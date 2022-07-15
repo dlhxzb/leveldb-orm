@@ -1,8 +1,8 @@
-Use `LevelDBOrm` + `level_db_key` to auto impl trait in [leveldb-orm](https://crates.io/crates/leveldb-orm)
+Use `LeveldbOrm` + `leveldb_key` to auto impl trait in [leveldb-orm](https://crates.io/crates/leveldb-orm)
 
 ```rust
-#[derive(LevelDBOrm)]
-#[level_db_key(executable, args)]
+#[derive(LeveldbOrm)]
+#[leveldb_key(executable, args)]
 struct Command {
     pub executable: u8,
     pub args: Vec<String>,

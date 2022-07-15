@@ -1,14 +1,14 @@
 use leveldb::database::Database;
 use leveldb::iterator::Iterable;
 use leveldb::options::{Options, ReadOptions};
-use leveldb_orm::{KVOrm, KeyOrm, LevelDBOrm};
+use leveldb_orm::{KVOrm, KeyOrm, LeveldbOrm};
 use serde::{Deserialize, Serialize};
 use tempdir::TempDir;
 
 #[test]
 fn test_methods() {
-    #[derive(Debug, Clone, Serialize, LevelDBOrm, Deserialize, PartialEq)]
-    #[level_db_key(executable, args)]
+    #[derive(Debug, Clone, Serialize, LeveldbOrm, Deserialize, PartialEq)]
+    #[leveldb_key(executable, args)]
     struct Command {
         pub executable: u8,
         pub args: Vec<String>,

@@ -42,22 +42,39 @@ fn derive_orm(input: DeriveInput) -> Result<TokenStream> {
     } else {
         return Err(Error::new(span, "LeveldbOrm macro for Struct only"));
     };
-    let keys = parse::parse_leveldb_key(&input.attrs)
+
+    let mut keys = parse::parse_leveldb_key(&input.attrs)
         .ok_or_else(|| Error::new(span, "Need attributr: `#[leveldb_key(key1, key2, ...)]`"))?;
-    let key_types = parse::parse_key_types(&keys, &fields)?;
+    let mut key_types = parse::parse_key_types(&keys, &fields)?;
+
+    let (keys, key_types, key_types_ref) = if key_types.len() == 1 {
+        let key = keys.pop().unwrap();
+        let key_type = key_types.pop().unwrap();
+        (
+            quote! { &self.#key },
+            quote! {#key_type},
+            quote! {&'a #key_type},
+        )
+    } else {
+        (
+            quote! { (#(&self.#keys,)*) },
+            quote! {(#(#key_types,)*)},
+            quote! {(#(&'a #key_types,)*)},
+        )
+    };
     let ident = input.ident;
 
-    let res = quote!(
+    let res = quote! {
         impl<'a> leveldb_orm::KeyOrm<'a> for #ident {
-            type KeyType = (#(#key_types,)*);
-            type KeyTypeRef = (#(&'a #key_types,)*);
+            type KeyType = #key_types;
+            type KeyTypeRef = #key_types_ref;
 
             #[inline]
             fn key(&self) -> leveldb_orm::Result<leveldb_orm::EncodedKey<Self>> {
-                Self::encode_key((#(&self.#keys,)*))
+                Self::encode_key(#keys)
             }
         }
-    );
+    };
     Ok(res.into())
 }
 

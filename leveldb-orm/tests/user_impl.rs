@@ -15,19 +15,13 @@ impl<'a> leveldb_orm::KeyOrm<'a> for Command {
     type KeyType = (u8, Vec<String>);
     type KeyTypeRef = (&'a u8, &'a Vec<String>);
     #[inline]
-    fn key(
-        &self,
-    ) -> std::result::Result<leveldb_orm::EncodedKey<Self>, Box<dyn std::error::Error>> {
+    fn key(&self) -> leveldb_orm::Result<leveldb_orm::EncodedKey<Self>> {
         Self::encode_key((&self.executable, &self.args))
     }
-    fn decode_key(
-        data: &EncodedKey<Self>,
-    ) -> std::result::Result<Self::KeyType, Box<dyn std::error::Error>> {
+    fn decode_key(data: &EncodedKey<Self>) -> leveldb_orm::Result<Self::KeyType> {
         bincode::deserialize(&data.inner).map_err(|e| e.into())
     }
-    fn encode_key(
-        key: Self::KeyTypeRef,
-    ) -> std::result::Result<EncodedKey<Self>, Box<dyn std::error::Error>> {
+    fn encode_key(key: Self::KeyTypeRef) -> leveldb_orm::Result<EncodedKey<Self>> {
         bincode::serialize(&key)
             .map(EncodedKey::from)
             .map_err(|e| e.into())

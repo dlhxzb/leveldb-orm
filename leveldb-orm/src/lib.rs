@@ -62,6 +62,8 @@ use serde::de::DeserializeOwned;
 use serde::Serialize;
 use std::marker::PhantomData;
 
+pub type Result<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync + 'static>>;
+
 /// The key for leveldb, which impled [`db_key::Key`]. (db-key 0.0.5 only impl it for i32)
 /// You can serialize you key to Vec<u8> / &\[u8\] and into EncodedKey.
 ///
@@ -113,16 +115,12 @@ pub trait KeyOrm<'a>: Sized {
 
     /// Without `macros` feature, you can impl `encode_key` by yourself
     #[cfg(not(feature = "macros"))]
-    fn encode_key(
-        key: Self::KeyTypeRef,
-    ) -> std::result::Result<EncodedKey<Self>, Box<dyn std::error::Error>>;
+    fn encode_key(key: Self::KeyTypeRef) -> Result<EncodedKey<Self>>;
 
     /// With `macros` feature, the key encodes by [`bincode`]
     #[cfg(feature = "macros")]
     #[inline]
-    fn encode_key(
-        key: Self::KeyTypeRef,
-    ) -> std::result::Result<EncodedKey<Self>, Box<dyn std::error::Error>> {
+    fn encode_key(key: Self::KeyTypeRef) -> Result<EncodedKey<Self>> {
         bincode::serialize(&key)
             .map(EncodedKey::from)
             .map_err(|e| e.into())
@@ -130,43 +128,35 @@ pub trait KeyOrm<'a>: Sized {
 
     /// Without `macros` feature, you can impl `decode_key` by yourself
     #[cfg(not(feature = "macros"))]
-    fn decode_key(
-        data: &EncodedKey<Self>,
-    ) -> std::result::Result<Self::KeyType, Box<dyn std::error::Error>>;
+    fn decode_key(data: &EncodedKey<Self>) -> Result<Self::KeyType>;
 
     /// With `macros` feature, the key decodes by [`bincode`]
     #[cfg(feature = "macros")]
     #[inline]
-    fn decode_key(
-        data: &EncodedKey<Self>,
-    ) -> std::result::Result<Self::KeyType, Box<dyn std::error::Error>> {
+    fn decode_key(data: &EncodedKey<Self>) -> Result<Self::KeyType> {
         bincode::deserialize(&data.inner).map_err(|e| e.into())
     }
 
     /// `#[derive(LeveldbOrm)]` + `#[leveldb_key(...)]` could auto impl this function, without derive macro you can impl it manully
-    fn key(&self) -> std::result::Result<EncodedKey<Self>, Box<dyn std::error::Error>>;
+    fn key(&self) -> Result<EncodedKey<Self>>;
 }
 
 /// An orm version of [`leveldb::database::kv::KV`](http://skade.github.io/leveldb/leveldb/database/kv/trait.KV.html)
 pub trait KVOrm<'a>: KeyOrm<'a> + Serialize + DeserializeOwned {
     /// Encode `Self` by [`bincode`]
     #[inline]
-    fn encode(&self) -> std::result::Result<Vec<u8>, Box<dyn std::error::Error>> {
+    fn encode(&self) -> Result<Vec<u8>> {
         bincode::serialize(self).map_err(|e| e.into())
     }
 
     /// Decode to `Self` by [`bincode`]
     #[inline]
-    fn decode(data: &[u8]) -> std::result::Result<Self, Box<dyn std::error::Error>> {
+    fn decode(data: &[u8]) -> Result<Self> {
         bincode::deserialize(data).map_err(|e| e.into())
     }
 
     /// Refer to [leveldb::database::kv::KV::put](http://skade.github.io/leveldb/leveldb/database/kv/trait.KV.html#tymethod.put)
-    fn put_sync(
-        &self,
-        db: &Database<EncodedKey<Self>>,
-        sync: bool,
-    ) -> std::result::Result<(), Box<dyn std::error::Error>> {
+    fn put_sync(&self, db: &Database<EncodedKey<Self>>, sync: bool) -> Result<()> {
         let key = self.key()?;
         let value = self.encode()?;
         db.put(leveldb::options::WriteOptions { sync }, key, &value)
@@ -174,10 +164,7 @@ pub trait KVOrm<'a>: KeyOrm<'a> + Serialize + DeserializeOwned {
     }
 
     /// With default sync = false
-    fn put(
-        &self,
-        db: &Database<EncodedKey<Self>>,
-    ) -> std::result::Result<(), Box<dyn std::error::Error>> {
+    fn put(&self, db: &Database<EncodedKey<Self>>) -> Result<()> {
         self.put_sync(db, false)
     }
 
@@ -186,7 +173,7 @@ pub trait KVOrm<'a>: KeyOrm<'a> + Serialize + DeserializeOwned {
         db: &Database<EncodedKey<Self>>,
         options: ReadOptions<'a, EncodedKey<Self>>,
         key: &EncodedKey<Self>,
-    ) -> Result<Option<Self>, Box<dyn std::error::Error>> {
+    ) -> Result<Option<Self>> {
         if let Some(data) = db.get(options, key)? {
             Ok(Some(bincode::deserialize(&data)?))
         } else {
@@ -195,19 +182,12 @@ pub trait KVOrm<'a>: KeyOrm<'a> + Serialize + DeserializeOwned {
     }
 
     /// With default `ReadOptions`
-    fn get(
-        db: &Database<EncodedKey<Self>>,
-        key: &EncodedKey<Self>,
-    ) -> Result<Option<Self>, Box<dyn std::error::Error>> {
+    fn get(db: &Database<EncodedKey<Self>>, key: &EncodedKey<Self>) -> Result<Option<Self>> {
         Self::get_with_option(db, ReadOptions::new(), key)
     }
 
     /// Refer to [leveldb::database::kv::KV::delete](http://skade.github.io/leveldb/leveldb/database/kv/trait.KV.html#tymethod.delete)
-    fn delete(
-        db: &Database<EncodedKey<Self>>,
-        sync: bool,
-        key: &EncodedKey<Self>,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    fn delete(db: &Database<EncodedKey<Self>>, sync: bool, key: &EncodedKey<Self>) -> Result<()> {
         db.delete(leveldb::options::WriteOptions { sync }, key)
             .map_err(|e| e.into())
     }
@@ -215,10 +195,7 @@ pub trait KVOrm<'a>: KeyOrm<'a> + Serialize + DeserializeOwned {
 
 /// An orm version of [`leveldb::database::batch::Writebatch::put`](http://skade.github.io/leveldb/leveldb/database/batch/struct.Writebatch.html#method.put)
 pub trait WritebatchOrm<'a>: KVOrm<'a> {
-    fn put_batch(
-        &self,
-        batch: &mut Writebatch<EncodedKey<Self>>,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    fn put_batch(&self, batch: &mut Writebatch<EncodedKey<Self>>) -> Result<()> {
         let key = self.key()?;
         let value = self.encode()?;
         batch.put(key, &value);

@@ -12,7 +12,7 @@
 //! }
 //!  
 //! // Generate code
-//! 
+//!
 //! // impl<'a> leveldb_orm::KeyOrm<'a> for Command {
 //! //     type KeyType = (u8, Vec<String>);
 //! //     type KeyTypeRef = (&'a u8, &'a Vec<String>);
@@ -53,7 +53,7 @@ fn derive_orm(input: DeriveInput) -> Result<TokenStream> {
             type KeyTypeRef = (#(&'a #key_types,)*);
 
             #[inline]
-            fn key(&self) -> std::result::Result<leveldb_orm::EncodedKey<Self>, Box<dyn std::error::Error>> {
+            fn key(&self) -> leveldb_orm::Result<leveldb_orm::EncodedKey<Self>> {
                 Self::encode_key((#(&self.#keys,)*))
             }
         }

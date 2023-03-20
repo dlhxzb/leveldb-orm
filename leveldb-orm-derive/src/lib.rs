@@ -79,40 +79,24 @@ fn derive_orm(input: DeriveInput) -> Result<TokenStream> {
 }
 
 mod parse {
-    use syn::{
-        parse_quote, Attribute, Error, Fields, Ident, Meta, MetaList, NestedMeta, Path, Result,
-        Type,
-    };
+    use syn::{Attribute, Error, Fields, Ident, Result, Type};
 
     pub fn parse_leveldb_key(attrs: &[Attribute]) -> Option<Vec<Ident>> {
         attrs.iter().find_map(|attr| {
-            attr.parse_meta().ok().and_then(|meta| {
-                let path_name: Path = parse_quote!(leveldb_key);
-                if meta.path() == &path_name {
-                    if let Meta::List(MetaList { nested, .. }) = meta {
-                        let keys = nested.iter().filter_map(parse_key).collect::<Vec<_>>();
-                        if keys.is_empty() {
-                            None
-                        } else {
-                            Some(keys)
-                        }
-                    } else {
-                        None
+            if attr.path().is_ident("leveldb_key") {
+                let mut keys = vec![];
+                attr.parse_nested_meta(|meta| {
+                    if let Some(key) = meta.path.get_ident() {
+                        keys.push(key.clone());
                     }
-                } else {
-                    None
-                }
-            })
+                    Ok(())
+                })
+                .unwrap();
+                (!keys.is_empty()).then_some(keys)
+            } else {
+                None
+            }
         })
-    }
-
-    // Parse a single key
-    fn parse_key(nested_meta: &NestedMeta) -> Option<Ident> {
-        if let NestedMeta::Meta(Meta::Path(Path { segments, .. })) = nested_meta {
-            segments.first().map(|seg| seg.ident.clone())
-        } else {
-            None
-        }
     }
 
     pub fn parse_key_types(keys: &[Ident], fields: &Fields) -> Result<Vec<Type>> {

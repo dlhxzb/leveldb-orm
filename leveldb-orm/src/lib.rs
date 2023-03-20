@@ -98,7 +98,7 @@ impl<T> From<Vec<u8>> for EncodedKey<T> {
     }
 }
 
-impl<'a, T> From<&[u8]> for EncodedKey<T> {
+impl<T> From<&[u8]> for EncodedKey<T> {
     #[inline]
     fn from(v: &[u8]) -> Self {
         EncodedKey {
